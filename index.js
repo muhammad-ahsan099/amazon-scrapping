@@ -11,36 +11,42 @@ app.use(bodyParser.urlencoded({ extended: true }));
 const port = process.env.PORT || 3000;
 
 app.post('/data', async (req, res) => {
-//   const browser = await puppeteer.launch();
-const browser = await puppeteer.launch({args: ['--no-sandbox', '--disable-setuid-sandbox']});
-//   const browser = await puppeteer.launch({args: ['--no-sandbox'], headless: true, executablePath: '/usr/bin/chromium-browser', userDataDir: '/tmp'});
-  const page = await browser.newPage();
-  await page.goto(req.body.url, { timeout: 60000 });
+    //   const browser = await puppeteer.launch();
+    const browser = await puppeteer.launch({ args: ['--no-sandbox', '--disable-setuid-sandbox'] });
+    const page = await browser.newPage();
+    // await page.goto(req.body.url, { timeout: 60000 });
+    await page.goto(req.body.url, { timeout: 60000, waitUntil: 'networkidle0' });
 
-  const productName = await page.$eval('#productTitle', el => el.innerText);
-  
-  let productPrice;
-  try {
-      productPrice = await page.$eval('#color_name_0_price', el => el.innerText);
-  } catch (error) {
-      try {
-          productPrice = await page.$eval('#priceblock_ourprice', el => el.innerText);
-      } catch (error) {
-          try {
-              productPrice = await page.$eval('#price_inside_buybox', el => el.innerText);
-          } catch (error) {
-              try {
-                  productPrice = await page.$eval('.priceToPay, a-offscreen', el => el.innerText);
-              } catch (error) {
-                  console.log(error)
-              }
-          }
-      }
-  }
+    // const productName = await page.$eval('#productTitle', el => el.innerText);
+    let productName;
+    try {
+        productName = await page.$eval('#productTitle', el => el.innerText);
+    } catch (error) {
+        console.log("Error at Product Name: ", error)
+    }
 
-  res.json({productName , productPrice});
+    let productPrice;
+    try {
+        productPrice = await page.$eval('#color_name_0_price', el => el.innerText);
+    } catch (error) {
+        try {
+            productPrice = await page.$eval('#priceblock_ourprice', el => el.innerText);
+        } catch (error) {
+            try {
+                productPrice = await page.$eval('#price_inside_buybox', el => el.innerText);
+            } catch (error) {
+                try {
+                    productPrice = await page.$eval('.priceToPay, a-offscreen', el => el.innerText);
+                } catch (error) {
+                    console.log(error)
+                }
+            }
+        }
+    }
+
+    res.json({ productName, productPrice });
 });
 
 app.listen(port, () => {
-  console.log(`Server running on port ${port}`);
+    console.log(`Server running on port ${port}`);
 });
