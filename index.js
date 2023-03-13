@@ -11,7 +11,8 @@ app.use(bodyParser.urlencoded({ extended: true }));
 const port = process.env.PORT || 3000;
 
 app.post('/data', async (req, res) => {
-  const browser = await puppeteer.launch();
+//   const browser = await puppeteer.launch();
+  const browser = await puppeteer.launch({args: ['--no-sandbox'], headless: true, executablePath: '/usr/bin/chromium-browser', userDataDir: '/tmp'});
   const page = await browser.newPage();
   await page.goto(req.body.url, { timeout: 60000 });
 
